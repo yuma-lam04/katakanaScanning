@@ -40,8 +40,7 @@ describe('TrialGenerator', () => {
 
     it('should generate words within length range', () => {
         const gen = new TrialGenerator('seed1');
-        const level: any = 'medium'; // 'any' cast to avoid strict check issues if type defs lag
-        const trials = gen.generateSession({ ...config, wordLengthLevel: level });
+        const trials = gen.generateSession({ ...config, wordLengthLevel: 'medium' });
 
         trials.forEach(t => {
             expect(t.word.length).toBeGreaterThan(0);

@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback, type FC, type KeyboardEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type FC, type KeyboardEvent } from 'react';
 import { TrialGenerator } from '../core/generator';
 import { convertInput } from '../core/converter';
-import type { Stimulus, TestConfig, TrialResult } from '../types';
+import { getFontFamily } from '../core/fonts';
+import type { TestConfig, TrialResult } from '../types';
 
 interface TestRunnerProps {
     config: TestConfig;
@@ -13,7 +14,6 @@ interface TestRunnerProps {
 type Phase = 'fixation' | 'stimulus' | 'mask' | 'response' | 'feedback';
 
 export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, isPractice = false }) => {
-    const [trials, setTrials] = useState<Stimulus[]>([]);
     const [currentIdx, setCurrentIdx] = useState(0);
     const [phase, setPhase] = useState<Phase>('fixation');
     const [results, setResults] = useState<TrialResult[]>([]);
@@ -24,11 +24,11 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
     const timerRef = useRef<number | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Initialize
-    useEffect(() => {
-        const gen = new TrialGenerator(config.seed || Math.random().toString());
-        const t = isPractice ? gen.generatePractice() : gen.generateSession(config);
-        setTrials(t);
+    // Trials are a pure function of the config (seed is resolved by App),
+    // so derive them instead of syncing state in an effect
+    const trials = useMemo(() => {
+        const gen = new TrialGenerator(config.seed);
+        return isPractice ? gen.generatePractice() : gen.generateSession(config);
     }, [config, isPractice]);
 
     // Focus input on response phase
@@ -38,10 +38,10 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
         }
     }, [phase]);
 
-    // Phase Controller
-    const startTrial = useCallback(() => {
-        setPhase('fixation');
-        setInputValue('');
+    // Phase Controller: schedules the fixation -> stimulus -> mask -> response
+    // sequence. Callers are responsible for resetting phase/input state first,
+    // which keeps this safe to call from an effect (no synchronous setState).
+    const scheduleTrial = useCallback(() => {
         timerRef.current = window.setTimeout(() => {
             setPhase('stimulus');
             displayStartTimeRef.current = performance.now();
@@ -55,22 +55,27 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
         }, 1000); // FIXATION DURATION
     }, [config.duration]);
 
-    // Start first trial when trials are ready
+    // Start first trial when trials are ready (initial state is already fixation/empty)
     useEffect(() => {
         if (trials.length > 0 && currentIdx === 0 && !timerRef.current) {
-            startTrial();
+            scheduleTrial();
         }
-    }, [trials, startTrial]);
+    }, [trials, currentIdx, scheduleTrial]);
 
-    // Cleanup on unmount
+    // Cleanup on unmount. Nulling the ref matters: StrictMode remounts the
+    // component, and the start effect's !timerRef.current guard must pass again
     useEffect(() => {
         return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
         };
     }, []);
 
     const handleSubmit = () => {
-        if (phase !== 'response') return;
+        // Empty guard also blocks Enter-key submits, not just the button
+        if (phase !== 'response' || inputValue.trim().length === 0) return;
 
         const rt = performance.now() - displayStartTimeRef.current; // Approx, includes flash time
         const currentTrial = trials[currentIdx];
@@ -103,8 +108,10 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
 
         if (currentIdx < trials.length - 1) {
             setCurrentIdx(currentIdx + 1);
+            setPhase('fixation');
+            setInputValue('');
             if (timerRef.current) clearTimeout(timerRef.current);
-            startTrial();
+            scheduleTrial();
         } else {
             onComplete(newResults);
         }
@@ -121,7 +128,7 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
             if (e.key.length > 1 || e.ctrlKey || e.metaKey || e.altKey) return;
 
             // Allow ASCII letters and hyphen only
-            if (!/^[a-zA-Z\-]$/.test(e.key)) {
+            if (!/^[a-zA-Z-]$/.test(e.key)) {
                 e.preventDefault();
             }
         }
@@ -137,48 +144,43 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
     if (trials.length === 0) return <div>Generating...</div>;
 
     const currentTrial = trials[currentIdx];
+    const progress = (currentIdx + (phase === 'response' ? 0.5 : 0)) / trials.length;
 
     return (
-        <div className="screen">
-            <div className="mb-4 text-small">
-                Trial {currentIdx + 1} / {trials.length} {isPractice ? '(練習)' : ''}
+        <div className="screen" style={{ justifyContent: 'center' }}>
+            <div className="trial-meta">
+                <span className="meta-label">
+                    Trial {String(currentIdx + 1).padStart(2, '0')} / {String(trials.length).padStart(2, '0')}
+                </span>
+                {isPractice && <span className="meta-label">練習モード</span>}
+            </div>
+            <div className="progress-track">
+                <div className="progress-fill" style={{ width: `${progress * 100}%` }} />
             </div>
 
-            <div className="stimulus-area" style={{
-                height: '200px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: `${config.fontSize}px`,
-                letterSpacing: config.letterSpacing,
-                fontFamily:
-                    config.fontFamily === 'ud' ? 'var(--font-family-ud)' :
-                        config.fontFamily === 'yu-gothic' ? 'var(--font-family-yugothic)' :
-                            config.fontFamily === 'noto-sans-jp' ? 'var(--font-family-noto)' :
-                                config.fontFamily === 'ms-mincho' ? 'var(--font-family-mincho)' :
-                                    'var(--font-family-system)',
-                userSelect: 'none'
-            }}>
-                {phase === 'fixation' && '・'}
+            <div
+                className={`display-panel contrast-${config.contrast}`}
+                style={{
+                    fontSize: `${config.fontSize}px`,
+                    letterSpacing: config.letterSpacing,
+                    fontFamily: getFontFamily(config.fontFamily),
+                }}
+            >
+                {phase === 'fixation' && <span className="fixation-mark">・</span>}
                 {phase === 'stimulus' && currentTrial.displayString}
-                {phase === 'mask' && '###'}
+                {phase === 'mask' && <span className="mask-mark">###</span>}
                 {phase === 'response' && (
-                    <div style={{ width: '100%', maxWidth: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                    <div className="response-block">
                         {/* Real-time Preview for Romaji Mode */}
                         {config.inputMode === 'romaji' && (
-                            <div style={{
-                                minHeight: '1.5em',
-                                fontSize: '1.5rem',
-                                color: '#007bff',
-                                fontWeight: 'bold',
-                                marginBottom: '4px'
-                            }}>
-                                {convertInput(inputValue).converted || '\u00A0'}
+                            <div className="romaji-preview">
+                                {convertInput(inputValue).converted || ' '}
                             </div>
                         )}
                         <input
                             ref={inputRef}
-                            type={config.inputMode === 'romaji' ? 'text' : 'text'}
+                            type="text"
+                            className="response-input"
                             inputMode={config.inputMode === 'romaji' ? 'url' : undefined} // 'url' forces latin keyboard on many devices
                             autoComplete="off"
                             autoCorrect="off"
@@ -188,38 +190,23 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
                             onKeyDown={handleKeyDown}
                             onPaste={handlePaste}
                             placeholder={config.inputMode === 'romaji' ? "ローマ字で入力 ( - for ー )" : "見えた単語を入力"}
-                            style={{
-                                fontSize: '1.2rem',
-                                padding: '0.5rem',
-                                width: '100%',
-                                textAlign: 'center',
-                                borderRadius: '8px',
-                                border: '2px solid #ccc',
-                                imeMode: config.inputMode === 'romaji' ? 'disabled' : 'auto' // Old IE/Firefox support, good hint
-                            }}
                         />
                     </div>
                 )}
             </div>
 
-            <div className="response-area" style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="test-actions">
                 <button
+                    className="btn-primary btn-lg"
                     onClick={handleSubmit}
                     disabled={phase !== 'response' || inputValue.length === 0}
-                    style={{
-                        padding: '1rem 3rem',
-                        fontSize: '1.2rem',
-                        backgroundColor: 'var(--color-primary)',
-                        color: 'white',
-                        opacity: phase === 'response' ? 1 : 0.5
-                    }}
                 >
                     次へ
                 </button>
             </div>
 
-            <div className="mt-4">
-                <button className="text-small" onClick={onAbort}>中断して戻る</button>
+            <div className="mt-4" style={{ textAlign: 'center' }}>
+                <button className="btn-quiet" onClick={onAbort}>中断して戻る</button>
             </div>
         </div>
     );

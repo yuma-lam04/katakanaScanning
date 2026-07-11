@@ -6,11 +6,11 @@ interface HomeProps {
 
 export const Home: FC<HomeProps> = ({ onStart }) => {
     return (
-        <div className="screen">
-            <h1>カタカナ認識スクリーニング</h1>
+        <div className="screen" style={{ justifyContent: 'center', textAlign: 'center' }}>
+            <h2>カタカナ視認スクリーニング</h2>
 
-            <div className="p-4" style={{ textAlign: 'left', border: '1px solid #ccc', borderRadius: '8px', margin: '1rem 0' }}>
-                <h3 className="text-danger">⚠️ 注意事項（必ずお読みください）</h3>
+            <div className="notice mb-4">
+                <h3>注意事項（必ずお読みください）</h3>
                 <p>
                     このアプリケーションは、カタカナの読み取りにおける「形の取り違え」傾向を
                     簡易的にチェックするためのツールです。
@@ -34,9 +34,11 @@ export const Home: FC<HomeProps> = ({ onStart }) => {
                 </p>
             </div>
 
-            <button onClick={onStart} style={{ fontSize: '1.2rem', padding: '1rem 2rem', marginTop: '2rem', backgroundColor: 'var(--color-primary)', color: 'white' }}>
-                同意して開始する
-            </button>
+            <div className="mt-4">
+                <button className="btn-primary btn-lg" onClick={onStart}>
+                    同意して開始する
+                </button>
+            </div>
         </div>
     );
 };

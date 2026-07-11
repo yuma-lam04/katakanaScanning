@@ -138,7 +138,7 @@ const newWordsRaw = `
 `;
 
 const existingSet = new Set(existingHard);
-const newSet = new Set < string > ();
+const newSet = new Set();
 
 const lines = newWordsRaw.trim().split('\n').map(s => s.trim()).filter(s => s);
 

@@ -263,7 +263,7 @@ export class TrialGenerator {
         const stimuli: Stimulus[] = [];
 
         // 1. Filter by Vocabulary Level
-        let levelWords = RAW_WORDS.filter(w => w.level === config.vocabularyLevel);
+        const levelWords = RAW_WORDS.filter(w => w.level === config.vocabularyLevel);
         // If we run out of words for the exact level, maybe fallback? For now, assume sufficient.
 
         // 2. Filter by Length
@@ -290,6 +290,15 @@ export class TrialGenerator {
         if (pool.length === 0) {
             console.warn(`No words found for Level=${config.vocabularyLevel}. Using all.`);
             pool = RAW_WORDS; // Relax difficulty
+        }
+
+        // The raw list contains duplicate entries (within and across levels);
+        // dedupe by word so one session never shows the same word twice
+        const seen = new Set<string>();
+        pool = pool.filter(w => !seen.has(w.word) && seen.add(w.word));
+
+        if (pool.length < config.questionCount) {
+            console.warn(`Pool has only ${pool.length} words for the requested ${config.questionCount} questions.`);
         }
 
         const shuffled = this.shuffle(pool);

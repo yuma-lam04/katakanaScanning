@@ -13,7 +13,7 @@ import { toKatakana } from 'wanakana';
  */
 export const convertInput = (raw: string): { sanitized: string; converted: string } => {
     // 1. Sanitize: Remove non-alphanumeric/non-hyphen
-    let sanitized = raw.replace(/[^a-zA-Z\-]/g, '').toLowerCase();
+    let sanitized = raw.replace(/[^a-zA-Z-]/g, '').toLowerCase();
 
     // Fix: Handle 'nn' -> 'n' if NOT followed by a vowel or 'y'.
     // Logic: 
