@@ -1,10 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { convertInput } from './converter';
+import { convertInput, filterRomajiInput } from './converter';
 
 describe('Romaji Converter', () => {
     it('should sanitize non-ascii characters', () => {
         const { sanitized } = convertInput('a b c!@#');
         expect(sanitized).toBe('abc');
+    });
+
+    it('should keep only ASCII letters and hyphen in romaji input', () => {
+        expect(filterRomajiInput('Abc-かな123!')).toBe('Abc-');
+        expect(filterRomajiInput('コーヒー')).toBe('');
     });
 
     it('should convert basic romaji', () => {
