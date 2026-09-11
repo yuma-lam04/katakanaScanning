@@ -1,8 +1,16 @@
 import { toKatakana } from 'wanakana';
 
 /**
+ * Keeps only characters allowed by the romaji input mode.
+ * This is also applied while editing the controlled input so IME-generated
+ * kana, digits, spaces, and other symbols cannot remain in the answer value.
+ */
+export const filterRomajiInput = (raw: string): string =>
+    raw.replace(/[^a-zA-Z-]/g, '');
+
+/**
  * Sanitizes and converts Romaji input to Katakana.
- * 
+ *
  * Rules:
  * 1. Allow [a-zA-Z\-] only.
  * 2. Convert to Katakana using wanakana.
@@ -12,11 +20,11 @@ import { toKatakana } from 'wanakana';
  *    We force normalization to 'ー' for consistency.
  */
 export const convertInput = (raw: string): { sanitized: string; converted: string } => {
-    // 1. Sanitize: Remove non-alphanumeric/non-hyphen
-    let sanitized = raw.replace(/[^a-zA-Z-]/g, '').toLowerCase();
+    // 1. Sanitize and normalize case
+    let sanitized = filterRomajiInput(raw).toLowerCase();
 
     // Fix: Handle 'nn' -> 'n' if NOT followed by a vowel or 'y'.
-    // Logic: 
+    // Logic:
     // - 'pann' -> 'pan' (EOF) -> 'パン'
     // - 'kannta' -> 'kanta' (Consonant) -> 'カンタ'
     // - 'kanna' -> 'kanna' (Vowel) -> 'カンナ' (Preserved)
