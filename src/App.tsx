@@ -29,7 +29,7 @@ const resolveSeed = (config: TestConfig): TestConfig => ({
 });
 
 function App() {
-  const [view, setView] = useState<View>('setup');
+  const [view, setView] = useState<View>('home');
   const [config, setConfig] = useState<TestConfig>(DEFAULT_CONFIG);
   // Config actually used for the running test: same as `config` but with the
   // seed resolved. Kept separate so a blank seed stays blank in the setup form
@@ -70,7 +70,7 @@ function App() {
   };
 
   const handleRestart = () => setView('setup');
-  const handleHome = () => setView('setup');
+  const handleHome = () => setView('home');
 
   return (
     <div className="container">
