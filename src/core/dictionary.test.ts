@@ -1,28 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-
-interface DictionaryEntry {
-    word: string;
-    level: string;
-}
-
-const generatorPath = fileURLToPath(new URL('./generator.ts', import.meta.url));
-const generatorSource = readFileSync(generatorPath, 'utf8');
-const activeSource = generatorSource.replace(/^\s*\/\/.*$/gm, '');
-const entryPattern = /\{ word: '([^']+)', level: '(easy|normal|hard|info)' \}/g;
-const entries: DictionaryEntry[] = Array.from(activeSource.matchAll(entryPattern), match => ({
-    word: match[1],
-    level: match[2],
-}));
+import { RAW_WORDS } from './generator';
 
 describe('word dictionary', () => {
-    it('contains parseable dictionary entries', () => {
-        expect(entries.length).toBeGreaterThan(0);
+    it('contains dictionary entries', () => {
+        expect(RAW_WORDS.length).toBeGreaterThan(0);
     });
 
     it('contains only katakana words', () => {
-        const invalid = entries
+        const invalid = RAW_WORDS
             .filter(({ word }) => !/^[ァ-ヶー]+$/u.test(word))
             .map(({ word, level }) => `${level}: ${word}`);
 
@@ -30,7 +15,7 @@ describe('word dictionary', () => {
     });
 
     it('contains only words that fit a UI length category', () => {
-        const tooShort = entries
+        const tooShort = RAW_WORDS
             .filter(({ word }) => word.length < 3)
             .map(({ word, level }) => `${level}: ${word} (${word.length})`);
 
@@ -41,7 +26,7 @@ describe('word dictionary', () => {
         const seen = new Set<string>();
         const duplicates: string[] = [];
 
-        for (const { word, level } of entries) {
+        for (const { word, level } of RAW_WORDS) {
             const key = `${level}\u0000${word}`;
             if (seen.has(key)) duplicates.push(`${level}: ${word}`);
             seen.add(key);
