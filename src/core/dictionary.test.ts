@@ -9,8 +9,9 @@ interface DictionaryEntry {
 
 const generatorPath = fileURLToPath(new URL('./generator.ts', import.meta.url));
 const generatorSource = readFileSync(generatorPath, 'utf8');
+const activeSource = generatorSource.replace(/^\s*\/\/.*$/gm, '');
 const entryPattern = /\{ word: '([^']+)', level: '(easy|normal|hard|info)' \}/g;
-const entries: DictionaryEntry[] = Array.from(generatorSource.matchAll(entryPattern), match => ({
+const entries: DictionaryEntry[] = Array.from(activeSource.matchAll(entryPattern), match => ({
     word: match[1],
     level: match[2],
 }));
