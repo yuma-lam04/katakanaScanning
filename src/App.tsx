@@ -21,8 +21,6 @@ const DEFAULT_CONFIG: TestConfig = {
   seed: '',
 };
 
-// Fill in a random seed when the user left it blank, so the session
-// is reproducible afterwards (the seed is saved with each result)
 const resolveSeed = (config: TestConfig): TestConfig => ({
   ...config,
   seed: config.seed || Math.random().toString(36).slice(2, 10),
@@ -31,11 +29,9 @@ const resolveSeed = (config: TestConfig): TestConfig => ({
 function App() {
   const [view, setView] = useState<View>('home');
   const [config, setConfig] = useState<TestConfig>(DEFAULT_CONFIG);
-  // Config actually used for the running test: same as `config` but with the
-  // seed resolved. Kept separate so a blank seed stays blank in the setup form
-  // and the next run gets a fresh seed.
   const [runConfig, setRunConfig] = useState<TestConfig>(DEFAULT_CONFIG);
   const [sessionResults, setSessionResults] = useState<TrialResult[]>([]);
+  const [historySaveFailed, setHistorySaveFailed] = useState(false);
   const [isPractice, setIsPractice] = useState(false);
 
   const handleStartSetup = () => setView('setup');
@@ -44,6 +40,7 @@ function App() {
     setConfig(newConfig);
     setRunConfig(resolveSeed(newConfig));
     setSessionResults([]);
+    setHistorySaveFailed(false);
     setIsPractice(false);
     setView('test');
   };
@@ -52,6 +49,7 @@ function App() {
     setConfig(newConfig);
     setRunConfig(resolveSeed(newConfig));
     setSessionResults([]);
+    setHistorySaveFailed(false);
     setIsPractice(true);
     setView('test');
   };
@@ -61,10 +59,9 @@ function App() {
       alert('練習モード終了です。設定画面に戻ります。');
       setView('setup');
     } else {
-      // Save here (event handler runs once) rather than in a Results effect,
-      // which double-fires under StrictMode and duplicated history entries
-      saveResult(results);
+      const saved = saveResult(results);
       setSessionResults(results);
+      setHistorySaveFailed(!saved);
       setView('results');
     }
   };
@@ -81,7 +78,14 @@ function App() {
       {view === 'home' && <Home onStart={handleStartSetup} />}
       {view === 'setup' && <Setup initialConfig={config} onStart={handleStartTest} onPractice={handleStartPractice} />}
       {view === 'test' && <TestRunner config={runConfig} onComplete={handleTestComplete} onAbort={handleHome} isPractice={isPractice} />}
-      {view === 'results' && <Results results={sessionResults} config={runConfig} onRestart={handleRestart} />}
+      {view === 'results' && (
+        <Results
+          results={sessionResults}
+          config={runConfig}
+          historySaveFailed={historySaveFailed}
+          onRestart={handleRestart}
+        />
+      )}
     </div>
   );
 }
