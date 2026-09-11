@@ -24,8 +24,7 @@ describe('TrialGenerator', () => {
         const t2 = gen2.generateSession(config);
 
         expect(t1.length).toBeGreaterThan(0);
-        expect(t1[0].word).toBe(t2[0].word);
-        expect(t1[0].id).toBe(t2[0].id);
+        expect(t1).toEqual(t2);
     });
 
     it('should generate different sequence with different seed', () => {
@@ -38,35 +37,46 @@ describe('TrialGenerator', () => {
         expect(t1[0].id).not.toBe(t2[0].id);
     });
 
-    it('should generate words within length range', () => {
-        const gen = new TrialGenerator('seed1');
-        const trials = gen.generateSession({ ...config, wordLengthLevel: 'medium' });
-
-        trials.forEach(t => {
-            expect(t.word.length).toBeGreaterThan(0);
-            // Relaxed check: Just ensure they are strings
-            expect(typeof t.word).toBe('string');
-        });
-
-        // Check finding a word of expected length
-        const mediumWord = trials.find(t => t.word.length >= 5 && t.word.length <= 7);
-        expect(mediumWord).toBeDefined();
-    });
-
-    it('should generate stimuli with super-long words', () => {
+    it('should keep the requested length condition when enough words exist', () => {
         const gen = new TrialGenerator('test-seed');
-        const superConfig: TestConfig = {
+        const session = gen.generateSession({
             ...config,
             wordLengthLevel: 'super-long',
             vocabularyLevel: 'normal',
             questionCount: 5
-        };
+        });
 
-        const session = gen.generateSession(superConfig);
-        expect(session.length).toBeGreaterThan(0);
+        expect(session).toHaveLength(5);
         session.forEach(s => {
             expect(s.word.length).toBeGreaterThanOrEqual(11);
         });
+    });
+
+    it('should relax the length condition when the exact pool is too small', () => {
+        const gen = new TrialGenerator('fallback-length');
+        const session = gen.generateSession({
+            ...config,
+            vocabularyLevel: 'easy',
+            wordLengthLevel: 'long',
+            questionCount: 20
+        });
+
+        expect(session).toHaveLength(20);
+        expect(new Set(session.map(s => s.word)).size).toBe(20);
+        expect(session.some(s => s.word.length < 7 || s.word.length > 10)).toBe(true);
+    });
+
+    it('should relax the vocabulary level when one level cannot fill the request', () => {
+        const gen = new TrialGenerator('fallback-vocabulary');
+        const session = gen.generateSession({
+            ...config,
+            vocabularyLevel: 'easy',
+            wordLengthLevel: 'long',
+            questionCount: 200
+        });
+
+        expect(session).toHaveLength(200);
+        expect(new Set(session.map(s => s.word)).size).toBe(200);
     });
 
     it('should generate stimuli for info level', () => {
@@ -78,9 +88,7 @@ describe('TrialGenerator', () => {
         };
 
         const session = gen.generateSession(infoConfig);
-        expect(session.length).toBeGreaterThan(0);
-        // Verify a known info word exists or at least length is typically high?
-        // Just verify valid strings are returned.
+        expect(session).toHaveLength(5);
         session.forEach(s => {
             expect(s.word.length).toBeGreaterThan(0);
         });
