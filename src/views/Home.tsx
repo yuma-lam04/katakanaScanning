@@ -7,8 +7,6 @@ interface HomeProps {
 export const Home: FC<HomeProps> = ({ onStart }) => {
     return (
         <div className="screen" style={{ justifyContent: 'center', textAlign: 'center' }}>
-            <h2>カタカナ視認スクリーニング</h2>
-
             <div className="notice mb-4">
                 <h3>注意事項（必ずお読みください）</h3>
                 <p>
