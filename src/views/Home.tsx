@@ -26,8 +26,8 @@ export const Home: FC<HomeProps> = ({ onStart }) => {
 
             <div className="mt-4">
                 <p>
-                    各試行で、画面にカタカナや擬似単語が表示されます。<br />
-                    見えた文字（または正しいと思う文字）を素早く選んでください。
+                    各試行で、画面にカタカナ単語が短時間表示されます。<br />
+                    見えた単語を入力してください。
                 </p>
                 <p className="text-small">
                     所要時間：約3〜5分
