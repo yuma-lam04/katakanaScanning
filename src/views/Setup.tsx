@@ -23,11 +23,11 @@ export const Setup: FC<SetupProps> = ({ initialConfig, onStart, onPractice }) =>
                     <span className="field-label">入力モード</span>
                     <select value={config.inputMode} onChange={e => handleChange('inputMode', e.target.value as TestConfig['inputMode'])}>
                         <option value="direct">直接入力 (IME有効)</option>
-                        <option value="romaji">ローマ字モード (IME無効)</option>
+                        <option value="romaji">ローマ字モード</option>
                     </select>
                     {config.inputMode === 'romaji' && (
                         <p className="field-hint warn">
-                            ※英数字のみ許可。長音「ー」は「-」キーで入力。
+                            ※英字とハイフン「-」のみ入力できます。長音「ー」は「-」で入力。
                         </p>
                     )}
                 </label>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback, type FC, type KeyboardEvent } from 'react';
 import { TrialGenerator } from '../core/generator';
-import { convertInput } from '../core/converter';
+import { convertInput, filterRomajiInput } from '../core/converter';
 import { getFontFamily } from '../core/fonts';
 import type { TestConfig, TrialResult } from '../types';
 
@@ -189,7 +189,11 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
                             autoCorrect="off"
                             spellCheck="false"
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            onChange={(e) => setInputValue(
+                                config.inputMode === 'romaji'
+                                    ? filterRomajiInput(e.target.value)
+                                    : e.target.value
+                            )}
                             onKeyDown={handleKeyDown}
                             onPaste={handlePaste}
                             placeholder={config.inputMode === 'romaji' ? "ローマ字で入力 ( - for ー )" : "見えた単語を入力"}
