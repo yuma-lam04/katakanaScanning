@@ -118,6 +118,9 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
     };
 
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        // Pressing Enter to confirm an IME conversion must not submit the answer.
+        if (e.nativeEvent.isComposing) return;
+
         if (e.key === 'Enter') {
             handleSubmit();
             return;
