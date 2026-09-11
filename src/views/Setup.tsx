@@ -91,6 +91,24 @@ export const Setup: FC<SetupProps> = ({ initialConfig, onStart, onPractice }) =>
                 </label>
 
                 <label className="field">
+                    <span className="field-label">字間</span>
+                    <select value={config.letterSpacing} onChange={e => handleChange('letterSpacing', e.target.value)}>
+                        <option value="0">標準</option>
+                        <option value="0.05em">やや広い</option>
+                        <option value="0.1em">広い</option>
+                    </select>
+                </label>
+
+                <label className="field">
+                    <span className="field-label">コントラスト</span>
+                    <select value={config.contrast} onChange={e => handleChange('contrast', e.target.value as TestConfig['contrast'])}>
+                        <option value="high">高</option>
+                        <option value="medium">中</option>
+                        <option value="low">低</option>
+                    </select>
+                </label>
+
+                <label className="field">
                     <span className="field-label">Seed (任意)</span>
                     <input
                         type="text"
