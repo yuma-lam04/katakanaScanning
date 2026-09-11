@@ -70,7 +70,7 @@ function App() {
   };
 
   const handleRestart = () => setView('setup');
-  const handleHome = () => setView('home');
+  const handleHome = () => setView('setup');
 
   return (
     <div className="container">
