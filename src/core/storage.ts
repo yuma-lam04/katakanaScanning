@@ -2,24 +2,53 @@ import type { TrialResult } from '../types';
 
 const STORAGE_KEY = 'katakana_screening_results_v1';
 
-export const saveResult = (results: TrialResult[]) => {
-    const existing = getHistory();
-    const updated = [...existing, ...results];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-};
+interface HistoryReadResult {
+    history: TrialResult[];
+    success: boolean;
+}
 
-export const getHistory = (): TrialResult[] => {
-    const s = localStorage.getItem(STORAGE_KEY);
-    if (!s) return [];
+const readHistory = (): HistoryReadResult => {
     try {
-        return JSON.parse(s);
-    } catch {
-        return [];
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (!s) return { history: [], success: true };
+
+        const parsed: unknown = JSON.parse(s);
+        if (!Array.isArray(parsed)) {
+            console.warn('Stored history is not an array.');
+            return { history: [], success: false };
+        }
+
+        return { history: parsed as TrialResult[], success: true };
+    } catch (error) {
+        console.warn('Failed to read result history from localStorage.', error);
+        return { history: [], success: false };
     }
 };
 
-export const clearHistory = () => {
-    localStorage.removeItem(STORAGE_KEY);
+export const saveResult = (results: TrialResult[]): boolean => {
+    const { history: existing, success } = readHistory();
+    if (!success) return false;
+
+    try {
+        const updated = [...existing, ...results];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        return true;
+    } catch (error) {
+        console.warn('Failed to save result history to localStorage.', error);
+        return false;
+    }
+};
+
+export const getHistory = (): TrialResult[] => readHistory().history;
+
+export const clearHistory = (): boolean => {
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+        return true;
+    } catch (error) {
+        console.warn('Failed to clear result history from localStorage.', error);
+        return false;
+    }
 };
 
 // RFC 4180: quote fields containing commas, quotes, or newlines

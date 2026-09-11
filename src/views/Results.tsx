@@ -5,10 +5,11 @@ import { exportHistory } from '../core/storage';
 interface ResultsProps {
     results: TrialResult[];
     config: TestConfig;
+    historySaveFailed?: boolean;
     onRestart: () => void;
 }
 
-export const Results: FC<ResultsProps> = ({ results, config, onRestart }) => {
+export const Results: FC<ResultsProps> = ({ results, config, historySaveFailed = false, onRestart }) => {
     const stats = useMemo(() => {
         const total = results.length;
         const correct = results.filter(r => r.isCorrect).length;
@@ -23,6 +24,14 @@ export const Results: FC<ResultsProps> = ({ results, config, onRestart }) => {
             <p className="meta-label mb-4" style={{ textAlign: 'center' }}>
                 {config.vocabularyLevel} / {config.wordLengthLevel} / {config.duration}ms / {config.inputMode}
             </p>
+
+            {historySaveFailed && (
+                <div className="notice mb-4">
+                    <strong>履歴をブラウザに保存できませんでした。</strong>
+                    <br />
+                    この画面の結果は確認できますが、履歴には追加されていません。
+                </div>
+            )}
 
             <div className="stat-row">
                 <div className="stat">
