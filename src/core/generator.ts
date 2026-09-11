@@ -1,13 +1,13 @@
 import seedrandom from 'seedrandom';
 import type { Stimulus, TestConfig, VocabularyLevel } from '../types';
 
-interface WordEntry {
+export interface WordEntry {
     word: string;
     level: VocabularyLevel;
 }
 
 // Expanded Katakana Word List
-const RAW_WORDS: WordEntry[] = [
+export const RAW_WORDS: WordEntry[] = [
     // --- EASY (Daily items, concrete nouns) ---
     // Short (3-5)
     { word: 'バナナ', level: 'easy' }, { word: 'カメラ', level: 'easy' }, { word: 'テレビ', level: 'easy' },
