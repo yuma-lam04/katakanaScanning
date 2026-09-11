@@ -260,13 +260,8 @@ export class TrialGenerator {
     }
 
     generateSession(config: TestConfig): Stimulus[] {
-        const stimuli: Stimulus[] = [];
-
-        // 1. Filter by Vocabulary Level
         const levelWords = RAW_WORDS.filter(w => w.level === config.vocabularyLevel);
-        // If we run out of words for the exact level, maybe fallback? For now, assume sufficient.
 
-        // 2. Filter by Length
         let minLen = 0;
         let maxLen = 0;
 
@@ -278,41 +273,64 @@ export class TrialGenerator {
             default: minLen = 3; maxLen = 30;
         }
 
-        const eligibleWords = levelWords.filter(w => w.word.length >= minLen && w.word.length <= maxLen);
+        const dedupe = (words: WordEntry[]): WordEntry[] => {
+            const seen = new Set<string>();
+            return words.filter(w => !seen.has(w.word) && seen.add(w.word));
+        };
 
-        // Fallback logic: If intersection is empty, try to relax length constraint but keep vocab level
-        // If still empty, relax vocab constraint.
-        let pool = eligibleWords;
-        if (pool.length === 0) {
-            console.warn(`No words found for Level=${config.vocabularyLevel}, Length=${config.wordLengthLevel}. Relaxing length.`);
-            pool = levelWords; // Relax length
-        }
-        if (pool.length === 0) {
-            console.warn(`No words found for Level=${config.vocabularyLevel}. Using all.`);
-            pool = RAW_WORDS; // Relax difficulty
-        }
+        const eligibleWords = dedupe(
+            levelWords.filter(w => w.word.length >= minLen && w.word.length <= maxLen)
+        );
+        const sameLevelWords = dedupe(levelWords);
+        const allWords = dedupe(RAW_WORDS);
 
-        // The raw list contains duplicate entries (within and across levels);
-        // dedupe by word so one session never shows the same word twice
-        const seen = new Set<string>();
-        pool = pool.filter(w => !seen.has(w.word) && seen.add(w.word));
+        const selected: WordEntry[] = [];
+        const selectedWords = new Set<string>();
 
-        if (pool.length < config.questionCount) {
-            console.warn(`Pool has only ${pool.length} words for the requested ${config.questionCount} questions.`);
-        }
+        const appendFrom = (candidates: WordEntry[]) => {
+            const available = candidates.filter(w => !selectedWords.has(w.word));
+            const needed = config.questionCount - selected.length;
+            if (needed <= 0) return;
 
-        const shuffled = this.shuffle(pool);
-        const selected = shuffled.slice(0, config.questionCount); // Use requested count
-
-        selected.forEach(item => {
-            stimuli.push({
-                id: this.rng().toString(36).substr(2, 9),
-                word: item.word,
-                displayString: item.word
+            this.shuffle(available).slice(0, needed).forEach(item => {
+                selected.push(item);
+                selectedWords.add(item.word);
             });
-        });
+        };
 
-        return stimuli;
+        // Prefer the exact requested condition first.
+        appendFrom(eligibleWords);
+
+        // If there are too few words, relax only the length constraint.
+        if (selected.length < config.questionCount) {
+            console.warn(
+                `Only ${selected.length} unique words found for Level=${config.vocabularyLevel}, ` +
+                `Length=${config.wordLengthLevel}. Relaxing length.`
+            );
+            appendFrom(sameLevelWords);
+        }
+
+        // If the vocabulary level itself is still too small, use the full list.
+        if (selected.length < config.questionCount) {
+            console.warn(
+                `Only ${selected.length} unique words found for Level=${config.vocabularyLevel}. ` +
+                'Relaxing vocabulary level.'
+            );
+            appendFrom(allWords);
+        }
+
+        if (selected.length < config.questionCount) {
+            console.warn(
+                `Only ${selected.length} unique words are available for the requested ` +
+                `${config.questionCount} questions.`
+            );
+        }
+
+        return selected.map(item => ({
+            id: this.rng().toString(36).substr(2, 9),
+            word: item.word,
+            displayString: item.word
+        }));
     }
 
     generatePractice(): Stimulus[] {
