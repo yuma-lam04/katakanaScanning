@@ -58,12 +58,42 @@ describe('TrialGenerator', () => {
             ...config,
             vocabularyLevel: 'easy',
             wordLengthLevel: 'long',
-            questionCount: 20
+            questionCount: 21
         });
 
-        expect(session).toHaveLength(20);
-        expect(new Set(session.map(s => s.word)).size).toBe(20);
+        expect(session).toHaveLength(21);
+        expect(new Set(session.map(s => s.word)).size).toBe(21);
         expect(session.some(s => s.word.length < 7 || s.word.length > 10)).toBe(true);
+    });
+
+    it.each([
+        ['easy', 'short'], ['easy', 'medium'], ['easy', 'long'], ['easy', 'super-long'],
+        ['normal', 'short'], ['normal', 'medium'], ['normal', 'long'], ['normal', 'super-long'],
+        ['hard', 'short'], ['hard', 'medium'], ['hard', 'long'], ['hard', 'super-long'],
+        ['info', 'short'], ['info', 'medium'], ['info', 'long'], ['info', 'super-long'],
+    ] as const)('generates 20 %s %s words without relaxing conditions', (vocabularyLevel, wordLengthLevel) => {
+        const gen = new TrialGenerator(`ui-${vocabularyLevel}-${wordLengthLevel}`);
+        const session = gen.generateSession({
+            ...config,
+            vocabularyLevel,
+            wordLengthLevel,
+            questionCount: 20,
+        });
+
+        const ranges = {
+            short: [3, 5],
+            medium: [5, 7],
+            long: [7, 10],
+            'super-long': [11, 30],
+        } as const;
+        const [minLength, maxLength] = ranges[wordLengthLevel];
+
+        expect(session).toHaveLength(20);
+        expect(new Set(session.map(({ word }) => word)).size).toBe(20);
+        session.forEach(({ word }) => {
+            expect(word.length).toBeGreaterThanOrEqual(minLength);
+            expect(word.length).toBeLessThanOrEqual(maxLength);
+        });
     });
 
     it('should relax the vocabulary level when one level cannot fill the request', () => {
