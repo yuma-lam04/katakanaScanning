@@ -58,7 +58,7 @@ const csvField = (v: string | number | boolean): string => {
 };
 
 export const createHistoryCsv = (history: TrialResult[]): string => [
-    'Timestamp,Config_Font,Config_Size,Config_LetterSpacing,Config_Contrast,Config_Duration,Config_Length,Config_Vocab,Config_Mode,Config_QuestionCount,Config_Seed,StimulusID,Target,Input,InputRaw,Correct,RT',
+    'Timestamp,Config_Font,Config_Size,Config_LetterSpacing,Config_Contrast,Config_Duration,Config_Length,Config_Vocab,Config_Mode,Config_QuestionCount,Config_Seed,StimulusID,Target,Input,InputRaw,Unrecognized,Correct,RT',
     ...history.map(r =>
         [
             new Date(r.timestamp).toISOString(),
@@ -76,6 +76,7 @@ export const createHistoryCsv = (history: TrialResult[]): string => [
             r.targetWord,
             r.inputWord,
             r.inputRaw || '',
+            r.isUnrecognized ?? false,
             r.isCorrect,
             r.reactionTime.toFixed(2)
         ].map(csvField).join(',')

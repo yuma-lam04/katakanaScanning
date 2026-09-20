@@ -307,6 +307,7 @@ button:disabled {
 
 .test-actions {
   display: flex;
+  gap: 0.5rem;
   justify-content: center;
   margin-top: 1.5rem;
 }
@@ -372,6 +373,7 @@ button:disabled {
 
 .judge-ok { color: var(--ok); font-weight: 700; }
 .judge-ng { color: var(--danger); font-weight: 700; }
+.judge-unrecognized { color: var(--ink-2); font-weight: 700; }
 
 .input-raw {
   font-size: 0.78rem;
