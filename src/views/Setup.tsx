@@ -72,56 +72,61 @@ export const Setup: FC<SetupProps> = ({ initialConfig, onStart, onPractice, onHi
                     </select>
                 </label>
 
-                <label className="field">
-                    <span className="field-label">フォント</span>
-                    <select value={config.fontFamily} onChange={e => handleChange('fontFamily', e.target.value)}>
-                        {FONT_OPTIONS.map(option => (
-                            <option key={option.value} value={option.value}>
-                                {option.label} ({option.description})
-                            </option>
-                        ))}
-                    </select>
-                    <p className="field-hint">
-                        この設定は希望するフォントです。端末にない場合は代替フォントで表示されます。CSVには実際の表示フォントではなく、ここで指定したフォント名を記録します。
-                    </p>
-                </label>
+                <details className="advanced-settings">
+                    <summary>高度な設定</summary>
+                    <div className="advanced-settings-content">
+                        <label className="field">
+                            <span className="field-label">フォント</span>
+                            <select value={config.fontFamily} onChange={e => handleChange('fontFamily', e.target.value)}>
+                                {FONT_OPTIONS.map(option => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label} ({option.description})
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="field-hint">
+                                この設定は希望するフォントです。端末にない場合は代替フォントで表示されます。CSVには実際の表示フォントではなく、ここで指定したフォント名を記録します。
+                            </p>
+                        </label>
 
-                <label className="field">
-                    <span className="field-label">文字サイズ</span>
-                    <select value={config.fontSize} onChange={e => handleChange('fontSize', Number(e.target.value))}>
-                        <option value={24}>小 (24px)</option>
-                        <option value={32}>中 (32px)</option>
-                        <option value={40}>大 (40px)</option>
-                    </select>
-                </label>
+                        <label className="field">
+                            <span className="field-label">文字サイズ</span>
+                            <select value={config.fontSize} onChange={e => handleChange('fontSize', Number(e.target.value))}>
+                                <option value={24}>小 (24px)</option>
+                                <option value={32}>中 (32px)</option>
+                                <option value={40}>大 (40px)</option>
+                            </select>
+                        </label>
 
-                <label className="field">
-                    <span className="field-label">字間</span>
-                    <select value={config.letterSpacing} onChange={e => handleChange('letterSpacing', e.target.value)}>
-                        <option value="0">標準</option>
-                        <option value="0.05em">やや広い</option>
-                        <option value="0.1em">広い</option>
-                    </select>
-                </label>
+                        <label className="field">
+                            <span className="field-label">字間</span>
+                            <select value={config.letterSpacing} onChange={e => handleChange('letterSpacing', e.target.value)}>
+                                <option value="0">標準</option>
+                                <option value="0.05em">やや広い</option>
+                                <option value="0.1em">広い</option>
+                            </select>
+                        </label>
 
-                <label className="field">
-                    <span className="field-label">コントラスト</span>
-                    <select value={config.contrast} onChange={e => handleChange('contrast', e.target.value as TestConfig['contrast'])}>
-                        <option value="high">高</option>
-                        <option value="medium">中</option>
-                        <option value="low">低</option>
-                    </select>
-                </label>
+                        <label className="field">
+                            <span className="field-label">コントラスト</span>
+                            <select value={config.contrast} onChange={e => handleChange('contrast', e.target.value as TestConfig['contrast'])}>
+                                <option value="high">高</option>
+                                <option value="medium">中</option>
+                                <option value="low">低</option>
+                            </select>
+                        </label>
 
-                <label className="field">
-                    <span className="field-label">Seed (任意)</span>
-                    <input
-                        type="text"
-                        value={config.seed}
-                        placeholder="空白でランダム"
-                        onChange={e => handleChange('seed', e.target.value)}
-                    />
-                </label>
+                        <label className="field">
+                            <span className="field-label">Seed (任意)</span>
+                            <input
+                                type="text"
+                                value={config.seed}
+                                placeholder="空白でランダム"
+                                onChange={e => handleChange('seed', e.target.value)}
+                            />
+                        </label>
+                    </div>
+                </details>
             </div>
 
             <div className="flex-row gap-2 justify-center mt-4">
