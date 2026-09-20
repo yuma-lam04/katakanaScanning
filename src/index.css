@@ -167,6 +167,23 @@ h3 { font-size: 1rem; }
   color: var(--danger);
 }
 
+.advanced-settings {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.advanced-settings summary {
+  cursor: pointer;
+  padding: 0.75rem 0;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.advanced-settings-content {
+  padding-top: 0.25rem;
+}
+
 /* ---------- Buttons ---------- */
 
 button {
