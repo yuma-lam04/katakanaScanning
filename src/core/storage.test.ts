@@ -75,8 +75,8 @@ describe('storage', () => {
         const csv = createHistoryCsv([sampleResult]);
         const [header, row] = csv.split('\n');
 
-        expect(header).toBe('Timestamp,Config_Font,Config_Size,Config_LetterSpacing,Config_Contrast,Config_Duration,Config_Length,Config_Vocab,Config_Mode,Config_QuestionCount,Config_Seed,StimulusID,Target,Input,InputRaw,Correct,RT');
-        expect(row).toContain('system,32,0,high,500,medium,easy,direct,5,seed');
+        expect(header).toBe('Timestamp,Config_Font,Config_Size,Config_LetterSpacing,Config_Contrast,Config_Duration,Config_Length,Config_Vocab,Config_Mode,Config_QuestionCount,Config_Seed,StimulusID,Target,Input,InputRaw,Unrecognized,Correct,RT');
+        expect(row).toContain('system,32,0,high,500,medium,easy,direct,5,seed,stim-1,カメラ,カメラ,,false,true');
     });
 
     it('exports legacy results without newer measurement settings', () => {
@@ -95,6 +95,19 @@ describe('storage', () => {
 
         const [, row] = createHistoryCsv([legacyResult]).split('\n');
 
-        expect(row).toContain('system,32,,,500,medium,easy,direct,,seed');
+        expect(row).toContain('system,32,,,500,medium,easy,direct,,seed,stim-1,カメラ,カメラ,,false,true');
+    });
+
+    it('exports unrecognized results separately from incorrect answers', () => {
+        const unrecognizedResult: TrialResult = {
+            ...sampleResult,
+            inputWord: '',
+            isUnrecognized: true,
+            isCorrect: false
+        };
+
+        const [, row] = createHistoryCsv([unrecognizedResult]).split('\n');
+
+        expect(row).toContain('カメラ,,,true,false');
     });
 });

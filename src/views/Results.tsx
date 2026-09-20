@@ -42,9 +42,13 @@ export const Results: FC<ResultsProps> = ({ results, config, historySaveFailed =
                 <div className="stat">
                     <div className="stat-sub">平均反応時間</div>
                     <div className="stat-value">{(stats.meanRt / 1000).toFixed(2)}<span style={{ fontSize: '1rem' }}> s</span></div>
-                    <div className="stat-sub">提示開始から</div>
+                    <div className="stat-sub">提示開始から・未認識を含む</div>
                 </div>
             </div>
+
+            <p className="text-small" style={{ textAlign: 'center' }}>
+                未認識は不正解として正答率に含め、未認識を選ぶまでの時間を平均反応時間に含めます。
+            </p>
 
             <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', textAlign: 'left' }}>
                 <h3>詳細</h3>
@@ -61,13 +65,13 @@ export const Results: FC<ResultsProps> = ({ results, config, historySaveFailed =
                             <tr key={i}>
                                 <td>{r.targetWord}</td>
                                 <td>
-                                    {r.inputWord}
-                                    {r.inputRaw && r.inputRaw !== r.inputWord && (
+                                    {r.isUnrecognized ? '未認識' : r.inputWord}
+                                    {!r.isUnrecognized && r.inputRaw && r.inputRaw !== r.inputWord && (
                                         <div className="input-raw">({r.inputRaw})</div>
                                     )}
                                 </td>
-                                <td className={r.isCorrect ? 'judge-ok' : 'judge-ng'}>
-                                    {r.isCorrect ? '〇' : '×'}
+                                <td className={r.isCorrect ? 'judge-ok' : r.isUnrecognized ? 'judge-unrecognized' : 'judge-ng'}>
+                                    {r.isCorrect ? '〇' : r.isUnrecognized ? '未認識' : '×'}
                                 </td>
                             </tr>
                         ))}

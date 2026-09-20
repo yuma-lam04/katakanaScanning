@@ -25,6 +25,7 @@ export interface TrialResult {
     targetWord: string;
     inputWord: string;
     inputRaw?: string; // Raw input (e.g. Romaji)
+    isUnrecognized?: boolean;
     isCorrect: boolean;
     reactionTime: number; // ms
     config: TestConfig;

@@ -73,30 +73,30 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
         };
     }, []);
 
-    const handleSubmit = () => {
-        // Empty guard also blocks Enter-key submits, not just the button
-        if (phase !== 'response' || inputValue.trim().length === 0) return;
+    const handleSubmit = (isUnrecognized = false) => {
+        if (phase !== 'response' || (!isUnrecognized && inputValue.trim().length === 0)) return;
 
         const rt = performance.now() - displayStartTimeRef.current; // Approx, includes flash time
         const currentTrial = trials[currentIdx];
 
-        let finalInput = inputValue.trim();
+        let finalInput = isUnrecognized ? '' : inputValue.trim();
         let rawInput: string | undefined = undefined;
 
-        if (config.inputMode === 'romaji') {
+        if (config.inputMode === 'romaji' && !isUnrecognized) {
             rawInput = finalInput;
             const { converted } = convertInput(finalInput);
             finalInput = converted;
         }
 
         // Exact match check
-        const isCorrect = finalInput === currentTrial.word;
+        const isCorrect = !isUnrecognized && finalInput === currentTrial.word;
 
         const result: TrialResult = {
             stimulusId: currentTrial.id,
             targetWord: currentTrial.word,
             inputWord: finalInput,
             inputRaw: rawInput,
+            isUnrecognized,
             isCorrect,
             reactionTime: rt,
             config,
@@ -205,10 +205,16 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
             <div className="test-actions">
                 <button
                     className="btn-primary btn-lg"
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit()}
                     disabled={phase !== 'response' || inputValue.length === 0}
                 >
                     次へ
+                </button>
+                <button
+                    onClick={() => handleSubmit(true)}
+                    disabled={phase !== 'response'}
+                >
+                    見えなかった
                 </button>
             </div>
 
