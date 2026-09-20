@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createHistoryCsv, getHistory, saveResult } from './storage';
+import { clearHistory, createHistoryCsv, getHistory, loadHistory, saveResult } from './storage';
 import type { TrialResult } from '../types';
 
 const sampleResult: TrialResult = {
@@ -36,6 +36,7 @@ describe('storage', () => {
         vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
         expect(getHistory()).toEqual([]);
+        expect(loadHistory().success).toBe(false);
     });
 
     it('returns false instead of throwing when localStorage cannot be written', () => {
@@ -69,6 +70,23 @@ describe('storage', () => {
 
         expect(saveResult([sampleResult])).toBe(true);
         expect(setItem).toHaveBeenCalledOnce();
+    });
+
+    it('clears history when localStorage is available', () => {
+        const removeItem = vi.fn();
+        vi.stubGlobal('localStorage', { removeItem });
+
+        expect(clearHistory()).toBe(true);
+        expect(removeItem).toHaveBeenCalledOnce();
+    });
+
+    it('returns false when history cannot be cleared', () => {
+        vi.stubGlobal('localStorage', {
+            removeItem: vi.fn(() => { throw new Error('blocked'); })
+        });
+        vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+        expect(clearHistory()).toBe(false);
     });
 
     it('exports every measurement setting', () => {
