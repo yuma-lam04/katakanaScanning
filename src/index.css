@@ -286,6 +286,16 @@ button:disabled {
   user-select: text;
 }
 
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  color: #fff;
+  background: var(--danger);
+}
+
 .pause-message {
   max-width: 360px;
   display: flex;
@@ -383,6 +393,10 @@ button:disabled {
 
 .results-table tr:last-child td {
   border-bottom: none;
+}
+
+.history-table-wrap {
+  overflow-x: auto;
 }
 
 .judge-ok { color: var(--ok); font-weight: 700; }

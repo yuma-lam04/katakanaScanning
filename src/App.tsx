@@ -3,10 +3,11 @@ import { Home } from './views/Home';
 import { Setup } from './views/Setup';
 import { TestRunner } from './views/TestRunner';
 import { Results } from './views/Results';
-import { saveResult } from './core/storage';
+import { History } from './views/History';
+import { clearHistory, loadHistory, saveResult } from './core/storage';
 import type { TestConfig, TrialResult } from './types';
 
-type View = 'home' | 'setup' | 'test' | 'results';
+type View = 'home' | 'setup' | 'test' | 'results' | 'history';
 
 const DEFAULT_CONFIG: TestConfig = {
   fontFamily: 'system',
@@ -32,6 +33,9 @@ function App() {
   const [runConfig, setRunConfig] = useState<TestConfig>(DEFAULT_CONFIG);
   const [sessionResults, setSessionResults] = useState<TrialResult[]>([]);
   const [historySaveFailed, setHistorySaveFailed] = useState(false);
+  const [historyResults, setHistoryResults] = useState<TrialResult[]>([]);
+  const [historyLoadFailed, setHistoryLoadFailed] = useState(false);
+  const [historyClearFailed, setHistoryClearFailed] = useState(false);
   const [isPractice, setIsPractice] = useState(false);
 
   const handleStartSetup = () => setView('setup');
@@ -68,6 +72,20 @@ function App() {
 
   const handleRestart = () => setView('setup');
   const handleHome = () => setView('setup');
+  const handleOpenHistory = () => {
+    const { history, success } = loadHistory();
+    setHistoryResults(history);
+    setHistoryLoadFailed(!success);
+    setHistoryClearFailed(false);
+    setView('history');
+  };
+  const handleClearHistory = () => {
+    if (!window.confirm(`保存済みの${historyResults.length}件をすべて削除します。元に戻せません。`)) return;
+
+    const cleared = clearHistory();
+    setHistoryClearFailed(!cleared);
+    if (cleared) setHistoryResults([]);
+  };
 
   return (
     <div className="container">
@@ -76,7 +94,7 @@ function App() {
         <span className="app-note">簡易チェック / 非医療</span>
       </header>
       {view === 'home' && <Home onStart={handleStartSetup} />}
-      {view === 'setup' && <Setup initialConfig={config} onStart={handleStartTest} onPractice={handleStartPractice} />}
+      {view === 'setup' && <Setup initialConfig={config} onStart={handleStartTest} onPractice={handleStartPractice} onHistory={handleOpenHistory} />}
       {view === 'test' && <TestRunner config={runConfig} onComplete={handleTestComplete} onAbort={handleHome} isPractice={isPractice} />}
       {view === 'results' && (
         <Results
@@ -84,6 +102,15 @@ function App() {
           config={runConfig}
           historySaveFailed={historySaveFailed}
           onRestart={handleRestart}
+        />
+      )}
+      {view === 'history' && (
+        <History
+          history={historyResults}
+          loadFailed={historyLoadFailed}
+          clearFailed={historyClearFailed}
+          onClear={handleClearHistory}
+          onBack={handleRestart}
         />
       )}
     </div>

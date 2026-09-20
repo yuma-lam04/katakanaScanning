@@ -2,7 +2,7 @@ import type { TrialResult } from '../types';
 
 const STORAGE_KEY = 'katakana_screening_results_v1';
 
-interface HistoryReadResult {
+export interface HistoryReadResult {
     history: TrialResult[];
     success: boolean;
 }
@@ -39,7 +39,9 @@ export const saveResult = (results: TrialResult[]): boolean => {
     }
 };
 
-export const getHistory = (): TrialResult[] => readHistory().history;
+export const loadHistory = (): HistoryReadResult => readHistory();
+
+export const getHistory = (): TrialResult[] => loadHistory().history;
 
 export const clearHistory = (): boolean => {
     try {

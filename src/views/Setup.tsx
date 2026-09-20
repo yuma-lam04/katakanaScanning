@@ -6,9 +6,10 @@ interface SetupProps {
     initialConfig: TestConfig;
     onStart: (config: TestConfig) => void;
     onPractice: (config: TestConfig) => void;
+    onHistory: () => void;
 }
 
-export const Setup: FC<SetupProps> = ({ initialConfig, onStart, onPractice }) => {
+export const Setup: FC<SetupProps> = ({ initialConfig, onStart, onPractice, onHistory }) => {
     const [config, setConfig] = useState<TestConfig>(initialConfig);
 
     const handleChange = <K extends keyof TestConfig>(key: K, value: TestConfig[K]) => {
@@ -130,6 +131,9 @@ export const Setup: FC<SetupProps> = ({ initialConfig, onStart, onPractice }) =>
                 <button className="btn-primary" style={{ flex: 1 }} onClick={() => onStart(config)}>
                     テスト開始
                 </button>
+            </div>
+            <div className="mt-4" style={{ textAlign: 'center' }}>
+                <button className="btn-quiet" onClick={onHistory}>保存済みの履歴を確認</button>
             </div>
         </div>
     );
