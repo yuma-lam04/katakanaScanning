@@ -1,4 +1,5 @@
 import { useState, type FC } from 'react';
+import { FONT_OPTIONS } from '../core/fonts';
 import type { TestConfig, VocabularyLevel, WordLengthLevel } from '../types';
 
 interface SetupProps {
@@ -73,12 +74,15 @@ export const Setup: FC<SetupProps> = ({ initialConfig, onStart, onPractice }) =>
                 <label className="field">
                     <span className="field-label">フォント</span>
                     <select value={config.fontFamily} onChange={e => handleChange('fontFamily', e.target.value)}>
-                        <option value="system">システム標準 (メイリオ/YuGothic)</option>
-                        <option value="ud">UDフォント (あれば優先)</option>
-                        <option value="yu-gothic">游ゴシック</option>
-                        <option value="noto-sans-jp">Noto Sans JP</option>
-                        <option value="ms-mincho">MS明朝</option>
+                        {FONT_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>
+                                {option.label} ({option.description})
+                            </option>
+                        ))}
                     </select>
+                    <p className="field-hint">
+                        この設定は希望するフォントです。端末にない場合は代替フォントで表示されます。CSVには実際の表示フォントではなく、ここで指定したフォント名を記録します。
+                    </p>
                 </label>
 
                 <label className="field">

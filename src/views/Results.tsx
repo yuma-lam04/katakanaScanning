@@ -1,6 +1,7 @@
 import { useMemo, type FC } from 'react';
 import type { TestConfig, TrialResult } from '../types';
 import { exportHistory } from '../core/storage';
+import { getFontLabel } from '../core/fonts';
 
 interface ResultsProps {
     results: TrialResult[];
@@ -23,6 +24,9 @@ export const Results: FC<ResultsProps> = ({ results, config, historySaveFailed =
             <h2 style={{ textAlign: 'center' }}>結果サマリ</h2>
             <p className="meta-label mb-4" style={{ textAlign: 'center' }}>
                 {config.vocabularyLevel} / {config.wordLengthLevel} / {config.duration}ms / {config.inputMode}
+            </p>
+            <p className="text-small" style={{ textAlign: 'center' }}>
+                指定フォント: {getFontLabel(config.fontFamily)}。端末にない場合は代替フォントで表示されます。
             </p>
 
             {historySaveFailed && (
