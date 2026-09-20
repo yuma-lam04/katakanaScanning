@@ -79,12 +79,6 @@ h3 { font-size: 1rem; }
   margin: 0;
 }
 
-.app-header .app-note {
-  font-size: 0.72rem;
-  color: var(--ink-3);
-  white-space: nowrap;
-}
-
 .screen {
   flex: 1;
   display: flex;

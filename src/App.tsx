@@ -89,17 +89,15 @@ function App() {
 
   return (
     <div className="container">
-      <header className="app-header">
-        <h1 className="app-title">カタカナ視認スクリーニング</h1>
-        <span className="app-note">簡易チェック / 非医療</span>
-      </header>
+        <header className="app-header">
+          <h1 className="app-title">カタカナ視認スクリーニング</h1>
+        </header>
       {view === 'home' && <Home onStart={handleStartSetup} />}
       {view === 'setup' && <Setup initialConfig={config} onStart={handleStartTest} onPractice={handleStartPractice} onHistory={handleOpenHistory} />}
       {view === 'test' && <TestRunner config={runConfig} onComplete={handleTestComplete} onAbort={handleHome} isPractice={isPractice} />}
       {view === 'results' && (
         <Results
           results={sessionResults}
-          config={runConfig}
           historySaveFailed={historySaveFailed}
           onRestart={handleRestart}
         />
