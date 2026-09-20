@@ -286,6 +286,20 @@ button:disabled {
   user-select: text;
 }
 
+.pause-message {
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.pause-message span {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
 .romaji-preview {
   min-height: 1.5em;
   font-size: 1.4rem;

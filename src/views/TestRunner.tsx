@@ -11,7 +11,7 @@ interface TestRunnerProps {
     isPractice?: boolean;
 }
 
-type Phase = 'fixation' | 'stimulus' | 'mask' | 'response' | 'feedback';
+type Phase = 'fixation' | 'stimulus' | 'mask' | 'response' | 'paused';
 
 export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, isPractice = false }) => {
     const [currentIdx, setCurrentIdx] = useState(0);
@@ -23,6 +23,7 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
     const displayStartTimeRef = useRef<number>(0);
     const timerRef = useRef<number | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const phaseRef = useRef<Phase>(phase);
 
     // Trials are a pure function of the config (seed is resolved by App),
     // so derive them instead of syncing state in an effect
@@ -33,15 +34,24 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
 
     // Focus input on response phase
     useEffect(() => {
+        phaseRef.current = phase;
         if (phase === 'response' && inputRef.current) {
             inputRef.current.focus();
         }
     }, [phase]);
 
+    const clearScheduledTrial = useCallback(() => {
+        if (timerRef.current !== null) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+    }, []);
+
     // Phase Controller: schedules the fixation -> stimulus -> mask -> response
     // sequence. Callers are responsible for resetting phase/input state first,
     // which keeps this safe to call from an effect (no synchronous setState).
     const scheduleTrial = useCallback(() => {
+        clearScheduledTrial();
         timerRef.current = window.setTimeout(() => {
             setPhase('stimulus');
             displayStartTimeRef.current = performance.now();
@@ -49,29 +59,47 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
             timerRef.current = window.setTimeout(() => {
                 setPhase('mask');
                 timerRef.current = window.setTimeout(() => {
+                    timerRef.current = null;
                     setPhase('response');
                 }, 150); // MASK DURATION
             }, config.duration); // STIMULUS DURATION
         }, 1000); // FIXATION DURATION
-    }, [config.duration]);
+    }, [clearScheduledTrial, config.duration]);
 
     // Start first trial when trials are ready (initial state is already fixation/empty)
     useEffect(() => {
-        if (trials.length > 0 && currentIdx === 0 && !timerRef.current) {
+        if (trials.length > 0 && currentIdx === 0 && phase === 'fixation' && timerRef.current === null) {
             scheduleTrial();
         }
-    }, [trials, currentIdx, scheduleTrial]);
+    }, [trials, currentIdx, phase, scheduleTrial]);
 
     // Cleanup on unmount. Nulling the ref matters: StrictMode remounts the
     // component, and the start effect's !timerRef.current guard must pass again
     useEffect(() => {
         return () => {
-            if (timerRef.current) {
-                clearTimeout(timerRef.current);
-                timerRef.current = null;
-            }
+            clearScheduledTrial();
         };
-    }, []);
+    }, [clearScheduledTrial]);
+
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden || phaseRef.current === 'paused') return;
+
+            clearScheduledTrial();
+            setInputValue('');
+            setPhase('paused');
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [clearScheduledTrial]);
+
+    const handleRetry = () => {
+        if (phase !== 'paused') return;
+
+        setPhase('fixation');
+        scheduleTrial();
+    };
 
     const handleSubmit = (isUnrecognized = false) => {
         if (phase !== 'response' || (!isUnrecognized && inputValue.trim().length === 0)) return;
@@ -110,7 +138,6 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
             setCurrentIdx(currentIdx + 1);
             setPhase('fixation');
             setInputValue('');
-            if (timerRef.current) clearTimeout(timerRef.current);
             scheduleTrial();
         } else {
             onComplete(newResults);
@@ -172,6 +199,12 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
                 {phase === 'fixation' && <span className="fixation-mark">・</span>}
                 {phase === 'stimulus' && currentTrial.displayString}
                 {phase === 'mask' && <span className="mask-mark">###</span>}
+                {phase === 'paused' && (
+                    <div className="pause-message">
+                        <strong>画面が非表示になったため、この問題を中断しました。</strong>
+                        <span>再開すると、同じ問題を最初から提示します。</span>
+                    </div>
+                )}
                 {phase === 'response' && (
                     <div className="response-block">
                         {/* Real-time Preview for Romaji Mode */}
@@ -203,6 +236,12 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
             </div>
 
             <div className="test-actions">
+                {phase === 'paused' && (
+                    <button className="btn-primary btn-lg" onClick={handleRetry}>
+                        この問題をやり直す
+                    </button>
+                )}
+                {phase !== 'paused' && <>
                 <button
                     className="btn-primary btn-lg"
                     onClick={() => handleSubmit()}
@@ -216,6 +255,7 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
                 >
                     見えなかった
                 </button>
+                </>}
             </div>
 
             <div className="mt-4" style={{ textAlign: 'center' }}>
