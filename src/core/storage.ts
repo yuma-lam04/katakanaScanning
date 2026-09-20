@@ -57,29 +57,34 @@ const csvField = (v: string | number | boolean): string => {
     return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
+export const createHistoryCsv = (history: TrialResult[]): string => [
+    'Timestamp,Config_Font,Config_Size,Config_LetterSpacing,Config_Contrast,Config_Duration,Config_Length,Config_Vocab,Config_Mode,Config_QuestionCount,Config_Seed,StimulusID,Target,Input,InputRaw,Correct,RT',
+    ...history.map(r =>
+        [
+            new Date(r.timestamp).toISOString(),
+            r.config.fontFamily,
+            r.config.fontSize,
+            r.config.letterSpacing ?? '',
+            r.config.contrast ?? '',
+            r.config.duration,
+            r.config.wordLengthLevel,
+            r.config.vocabularyLevel,
+            r.config.inputMode || 'direct',
+            r.config.questionCount ?? '',
+            r.config.seed || '',
+            r.stimulusId,
+            r.targetWord,
+            r.inputWord,
+            r.inputRaw || '',
+            r.isCorrect,
+            r.reactionTime.toFixed(2)
+        ].map(csvField).join(',')
+    )
+].join('\n');
+
 export const exportHistory = () => {
     const history = getHistory();
-    const csv = [
-        'Timestamp,Config_Font,Config_Size,Config_Duration,Config_Length,Config_Vocab,Config_Mode,Config_Seed,StimulusID,Target,Input,InputRaw,Correct,RT',
-        ...history.map(r =>
-            [
-                new Date(r.timestamp).toISOString(),
-                r.config.fontFamily,
-                r.config.fontSize,
-                r.config.duration,
-                r.config.wordLengthLevel,
-                r.config.vocabularyLevel,
-                r.config.inputMode || 'direct',
-                r.config.seed || '',
-                r.stimulusId,
-                r.targetWord,
-                r.inputWord,
-                r.inputRaw || '',
-                r.isCorrect,
-                r.reactionTime.toFixed(2)
-            ].map(csvField).join(',')
-        )
-    ].join('\n');
+    const csv = createHistoryCsv(history);
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);

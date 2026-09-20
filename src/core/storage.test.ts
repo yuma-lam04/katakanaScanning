@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getHistory, saveResult } from './storage';
+import { createHistoryCsv, getHistory, saveResult } from './storage';
 import type { TrialResult } from '../types';
 
 const sampleResult: TrialResult = {
@@ -69,5 +69,32 @@ describe('storage', () => {
 
         expect(saveResult([sampleResult])).toBe(true);
         expect(setItem).toHaveBeenCalledOnce();
+    });
+
+    it('exports every measurement setting', () => {
+        const csv = createHistoryCsv([sampleResult]);
+        const [header, row] = csv.split('\n');
+
+        expect(header).toBe('Timestamp,Config_Font,Config_Size,Config_LetterSpacing,Config_Contrast,Config_Duration,Config_Length,Config_Vocab,Config_Mode,Config_QuestionCount,Config_Seed,StimulusID,Target,Input,InputRaw,Correct,RT');
+        expect(row).toContain('system,32,0,high,500,medium,easy,direct,5,seed');
+    });
+
+    it('exports legacy results without newer measurement settings', () => {
+        const legacyResult = {
+            ...sampleResult,
+            config: {
+                fontFamily: 'system',
+                fontSize: 32,
+                duration: 500,
+                wordLengthLevel: 'medium',
+                vocabularyLevel: 'easy',
+                inputMode: 'direct',
+                seed: 'seed'
+            }
+        } as TrialResult;
+
+        const [, row] = createHistoryCsv([legacyResult]).split('\n');
+
+        expect(row).toContain('system,32,,,500,medium,easy,direct,,seed');
     });
 });
