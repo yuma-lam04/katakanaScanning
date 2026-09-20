@@ -1,16 +1,14 @@
 import { useMemo, type FC } from 'react';
-import type { TestConfig, TrialResult } from '../types';
+import type { TrialResult } from '../types';
 import { exportHistory } from '../core/storage';
-import { getFontLabel } from '../core/fonts';
 
 interface ResultsProps {
     results: TrialResult[];
-    config: TestConfig;
     historySaveFailed?: boolean;
     onRestart: () => void;
 }
 
-export const Results: FC<ResultsProps> = ({ results, config, historySaveFailed = false, onRestart }) => {
+export const Results: FC<ResultsProps> = ({ results, historySaveFailed = false, onRestart }) => {
     const stats = useMemo(() => {
         const total = results.length;
         const correct = results.filter(r => r.isCorrect).length;
@@ -22,12 +20,6 @@ export const Results: FC<ResultsProps> = ({ results, config, historySaveFailed =
     return (
         <div className="screen" style={{ justifyContent: 'flex-start' }}>
             <h2 style={{ textAlign: 'center' }}>結果サマリ</h2>
-            <p className="meta-label mb-4" style={{ textAlign: 'center' }}>
-                {config.vocabularyLevel} / {config.wordLengthLevel} / {config.duration}ms / {config.inputMode}
-            </p>
-            <p className="text-small" style={{ textAlign: 'center' }}>
-                指定フォント: {getFontLabel(config.fontFamily)}。端末にない場合は代替フォントで表示されます。
-            </p>
 
             {historySaveFailed && (
                 <div className="notice mb-4">
