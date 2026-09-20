@@ -62,7 +62,7 @@ describe('TestRunner', () => {
             fireEvent.keyDown(input, { key: 'Enter', isComposing: false });
 
             if (index < config.questionCount - 1) {
-                expect(screen.getByText(`Trial ${String(index + 2).padStart(2, '0')} / 05`)).toBeTruthy();
+                expect(screen.getByText(`${String(index + 2).padStart(2, '0')} / 05`)).toBeTruthy();
             }
         }
 

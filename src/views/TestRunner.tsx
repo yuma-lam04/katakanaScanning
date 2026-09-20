@@ -180,7 +180,7 @@ export const TestRunner: FC<TestRunnerProps> = ({ config, onComplete, onAbort, i
         <div className="screen" style={{ justifyContent: 'center' }}>
             <div className="trial-meta">
                 <span className="meta-label">
-                    Trial {String(currentIdx + 1).padStart(2, '0')} / {String(trials.length).padStart(2, '0')}
+                    {String(currentIdx + 1).padStart(2, '0')} / {String(trials.length).padStart(2, '0')}
                 </span>
                 {isPractice && <span className="meta-label">練習モード</span>}
             </div>
